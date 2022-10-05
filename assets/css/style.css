@@ -1,0 +1,19 @@
+* CSS Variables */
+:root {
+  /* declare a variable with `--` syntax */
+  --back: #154ba1;
+  --text: rgb(255, 255, 255);
+}
+
+/* Universal Selector */
+* {
+  margin:0;
+  padding:0;  
+  box-sizing: border-box;
+}
+
+#forecast {
+  background-color:#1d3253;
+  color: #ffffff;
+}
+
