@@ -5,6 +5,9 @@ var tempEl = $("#temp");
 var windEl = $("#wind");
 var humidityEl = $("#humidity");
 var iconEl = $("#icon");
+var forecastEl = $("#forecast-cards");
+
+var displayCards = false;
 
 function getCoordinates(event) {
 	event.preventDefault();
@@ -41,6 +44,7 @@ function getCity(coordinates) {
 		if(response.ok) {//checks if response is successful
 			response.json().then(function(data) {//2nd promise to return a body property called data in JSON format
 					//function to display results
+          console.log(data.list[0]);//debug
 					getWeather(data);
 				});
 		} else {
@@ -58,13 +62,49 @@ function getWeather(weather) {
 
   var iconCode = day[0].weather[0].icon;
   var iconURL = "http://openweathermap.org/img/wn/" + iconCode + "@2x.png"
-  console.log(cityEl);
+
   cityEl.text(weather.city.name + " (" + moment(day[0].dt_txt).format("L") + ")");
-  $("#icon").attr("src", iconURL).attr("width", 30).attr("height", 30);
+  $("#icon").attr("src", iconURL).attr("width", 50).attr("height", 50);
   tempEl.text("Temp: " + day[0].main.temp + " °F");
   windEl.text("Wind: " + day[0].wind.speed + " MPH");
   humidityEl.text("Humidity: " + day[0].main.humidity + "%");
 }
 
+function renderResults() {
+  //Create and append cards for each day if not already displayed
+  if(displayCards===false) {
+    for(var i=0; i<5; i++) {
+      var cardEl = $("<div>");
+      cardEl.addClass("card m-3");
+      cardEl.attr("id", "day" + i).attr("style", "width: 12rem");
+      forecastEl.append(cardEl);
+      var cardBodyEl = $("<div>");
+      cardBodyEl.addClass("card-body");
+      cardEl.append(cardBodyEl);
+      var cardHeaderEl = $("<h4>");
+      cardHeaderEl.addClass("card-title");
+      cardHeaderEl.attr("id", "title" + i);
+      cardHeaderEl.text("Date");//debug
+      cardBodyEl.append(cardHeaderEl);
+      var iconEl = $("<img>");
+      iconEl.attr("id", "icon" + i);
+      cardBodyEl.append(iconEl);
+      var tempEl = $("<p>");
+      tempEl.attr("id", "temp" + i);
+      tempEl.text("Temp: ");//debug
+      cardBodyEl.append(tempEl);
+      var windEl = $("<p>");
+      windEl.attr("id", "wind" + i);
+      windEl.text("Wind: ");//debug
+      cardBodyEl.append(windEl);
+      var humidEl = $("<p>");
+      humidEl.attr("id", "humid" + i);
+      humidEl.text("Humidity: ");//debug
+      cardBodyEl.append(humidEl);
+    }
+  }
+  displayCards=true;
+}
+  
 
 searchBtnEl.on('click', getCoordinates);

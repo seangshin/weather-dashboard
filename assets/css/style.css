@@ -12,7 +12,7 @@
   box-sizing: border-box;
 }
 
-#forecast {
+#day0, #day1, #day2, #day3, #day4 {
   background-color:#1d3253;
   color: #ffffff;
 }
