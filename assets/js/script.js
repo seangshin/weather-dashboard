@@ -1,5 +1,6 @@
 var userInputEl = $("#userInput");
 var searchBtnEl = $("#searchBtn");
+var currentEl = $("#current");
 var cityEl = $("#city");
 var tempEl = $("#temp");
 var windEl = $("#wind");
@@ -20,7 +21,7 @@ function getCoordinates(event) {
 			if(response.ok) {//checks if response is successful
 				response.json().then(function(data) {//2nd promise to return a body property called data in JSON format
 					//function to display results
-					getCity(data);
+					getWeather(data);
 				});
 			} else {
 					alert("Error: " + response.statusText);
@@ -33,19 +34,34 @@ function getCoordinates(event) {
 		} 
 }
 
-function getCity(coordinates) {
+function getWeather(coordinates) {
 	var lat = coordinates[0].lat;
 	var lon = coordinates[0].lon;
-	var requestURL = "https://api.openweathermap.org/data/2.5/forecast?lat=" + lat + "&lon=" + lon + "&appid=10610edbd2d1162b9c9ba8135c819547&units=imperial"
-
-	fetch(requestURL)//calls Fetch API and uses requestURL as parameter, returns a promise
+	var forecastRequestURL = "https://api.openweathermap.org/data/2.5/forecast?lat=" + lat + "&lon=" + lon + "&appid=10610edbd2d1162b9c9ba8135c819547&units=imperial"
+  var currentRequestURL = "https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon=" + lon + "&appid=10610edbd2d1162b9c9ba8135c819547&units=imperial"
+	
+  fetch(currentRequestURL)//calls Fetch API and uses requestURL as parameter, returns a promise
 	.then(function(response) {//then method used to return a response object (1st promise)
 		console.log(response);//debug
 		if(response.ok) {//checks if response is successful
 			response.json().then(function(data) {//2nd promise to return a body property called data in JSON format
 					//function to display results
-          console.log(data.list[0]);//debug
-					getWeather(data);
+          console.log(data);//debug
+          displayCurrent(data);
+				});
+		} else {
+				alert("Error: " + response.statusText);
+			}
+	})
+
+  fetch(forecastRequestURL)//calls Fetch API and uses requestURL as parameter, returns a promise
+	.then(function(response) {//then method used to return a response object (1st promise)
+		console.log(response);//debug
+		if(response.ok) {//checks if response is successful
+			response.json().then(function(data) {//2nd promise to return a body property called data in JSON format
+					//function to display results
+          console.log(data);//debug
+					results(data);
 				});
 		} else {
 				alert("Error: " + response.statusText);
@@ -53,21 +69,22 @@ function getCity(coordinates) {
 	})
 }
 
-function getWeather(weather) {
-  var day = [];
-
-  for(var i=0; i<6; i++) {
-    day.push(weather.list[i*8]);
-  }
-
-  var iconCode = day[0].weather[0].icon;
-  var iconURL = "http://openweathermap.org/img/wn/" + iconCode + "@2x.png"
-
-  cityEl.text(weather.city.name + " (" + moment(day[0].dt_txt).format("L") + ")");
+function displayCurrent(day) {
+  //Pulls weather icon code and concats to provided URL to create image url
+  var iconCode = day.weather[0].icon;
+  var iconURL = "http://openweathermap.org/img/wn/" + iconCode + "@2x.png";
+  
+  //Print current day results
+  cityEl.text(day.name + " (" + moment.utc().format("L") + ")");
   $("#icon").attr("src", iconURL).attr("width", 50).attr("height", 50);
-  tempEl.text("Temp: " + day[0].main.temp + " °F");
-  windEl.text("Wind: " + day[0].wind.speed + " MPH");
-  humidityEl.text("Humidity: " + day[0].main.humidity + "%");
+  tempEl.text("Temp: " + day.main.temp + " °F");
+  windEl.text("Wind: " + day.wind.speed + " MPH");
+  humidityEl.text("Humidity: " + day.main.humidity + "%");
+}
+
+function results(weather) {
+  renderResults();
+  printForecast(weather);
 }
 
 function renderResults() {
@@ -104,6 +121,24 @@ function renderResults() {
     }
   }
   displayCards=true;
+}
+
+function printForecast(day) {
+  //Print 5 day forecast
+  for(var i=0; i<5; i++) {
+    var title = $("#title" + i);
+    title.text(moment(day.list[(i*8)+7].dt_txt).format("L"));
+    var icon = $("#icon" + i);
+    var cardIconCode = day.list[(i*8)+7].weather[0].icon;
+    var cardIconURL = "http://openweathermap.org/img/wn/" + cardIconCode + "@2x.png";
+    icon.attr("src", cardIconURL).attr("width", 50).attr("height", 50);
+    var temp = $("#temp" + i);
+    temp.text("Temp: " + day.list[(i*8)+7].main.temp + " °F")
+    var wind = $("#wind" + i);
+    wind.text("Wind: " + day.list[(i*8)+7].wind.speed + " MPH")
+    var humid = $("#humid" + i);
+    humid.text("Humidity: " + day.list[(i*8)+7].main.humidity + "%")
+  }
 }
   
 
