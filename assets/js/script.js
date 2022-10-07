@@ -1,5 +1,6 @@
 var userInputEl = $("#userInput");
 var searchBtnEl = $("#searchBtn");
+var clearBtnEl = $("#clearBtn");
 var currentEl = $("#current");
 var cityEl = $("#city");
 var tempEl = $("#temp");
@@ -7,9 +8,19 @@ var windEl = $("#wind");
 var humidityEl = $("#humidity");
 var iconEl = $("#icon");
 var forecastEl = $("#forecast-cards");
+var previousCitiesEl = $("#previous-cities");
 
+//Global variables
+var previousCurrent = [];
+var previousForecast = [];
 var displayCards = false;
 
+//Function init performed when page is opened
+function init() {
+  pullLocalStorage();
+  renderPreviousCities();
+}init();
+//Function to get the coordinates of the city searched by using the API provided 
 function getCoordinates(event) {
 	event.preventDefault();
 	var city = userInputEl.val().trim();
@@ -33,7 +44,7 @@ function getCoordinates(event) {
 			alert("Please enter a city")//alerts user if no text entered
 		} 
 }
-
+//Function to get the weather data by passing in city coordinates, uses the Current Weather Data and 5 Day / 3 Hour Forecast API 
 function getWeather(coordinates) {
 	var lat = coordinates[0].lat;
 	var lon = coordinates[0].lon;
@@ -42,12 +53,15 @@ function getWeather(coordinates) {
 	
   fetch(currentRequestURL)//calls Fetch API and uses requestURL as parameter, returns a promise
 	.then(function(response) {//then method used to return a response object (1st promise)
-		console.log(response);//debug
 		if(response.ok) {//checks if response is successful
 			response.json().then(function(data) {//2nd promise to return a body property called data in JSON format
 					//function to display results
-          console.log(data);//debug
           displayCurrent(data);
+          //function to append search
+          appendSearch(data);
+          //save data to local storage
+          previousCurrent.push(data);
+          localStorage.setItem("previousCurrent", JSON.stringify(previousCurrent));
 				});
 		} else {
 				alert("Error: " + response.statusText);
@@ -56,19 +70,21 @@ function getWeather(coordinates) {
 
   fetch(forecastRequestURL)//calls Fetch API and uses requestURL as parameter, returns a promise
 	.then(function(response) {//then method used to return a response object (1st promise)
-		console.log(response);//debug
 		if(response.ok) {//checks if response is successful
 			response.json().then(function(data) {//2nd promise to return a body property called data in JSON format
 					//function to display results
-          console.log(data);//debug
-					results(data);
+          renderResults();
+					printForecast(data);
+          //save data to local storage
+          previousForecast.push(data);
+          localStorage.setItem("previousForecast", JSON.stringify(previousForecast));
 				});
 		} else {
 				alert("Error: " + response.statusText);
 			}
 	})
 }
-
+//Function to display the current weather forcast
 function displayCurrent(day) {
   //Pulls weather icon code and concats to provided URL to create image url
   var iconCode = day.weather[0].icon;
@@ -81,12 +97,15 @@ function displayCurrent(day) {
   windEl.text("Wind: " + day.wind.speed + " MPH");
   humidityEl.text("Humidity: " + day.main.humidity + "%");
 }
-
-function results(weather) {
-  renderResults();
-  printForecast(weather);
+//Function to append city name 
+function appendSearch(day) {
+  var liEl = $("<div>");
+  liEl.addClass("list-group-item list-group-item-action");
+  liEl.attr("id", "city" + previousCurrent.length);
+  liEl.text(day.name);
+  previousCitiesEl.append(liEl);
 }
-
+//Function to render the 5 day forecast cards
 function renderResults() {
   //Create and append cards for each day if not already displayed
   if(displayCards===false) {
@@ -101,28 +120,24 @@ function renderResults() {
       var cardHeaderEl = $("<h4>");
       cardHeaderEl.addClass("card-title");
       cardHeaderEl.attr("id", "title" + i);
-      cardHeaderEl.text("Date");//debug
       cardBodyEl.append(cardHeaderEl);
       var iconEl = $("<img>");
       iconEl.attr("id", "icon" + i);
       cardBodyEl.append(iconEl);
       var tempEl = $("<p>");
       tempEl.attr("id", "temp" + i);
-      tempEl.text("Temp: ");//debug
       cardBodyEl.append(tempEl);
       var windEl = $("<p>");
       windEl.attr("id", "wind" + i);
-      windEl.text("Wind: ");//debug
       cardBodyEl.append(windEl);
       var humidEl = $("<p>");
       humidEl.attr("id", "humid" + i);
-      humidEl.text("Humidity: ");//debug
       cardBodyEl.append(humidEl);
     }
   }
   displayCards=true;
 }
-
+//Function to print the 5 day forecast for each card
 function printForecast(day) {
   //Print 5 day forecast
   for(var i=0; i<5; i++) {
@@ -140,6 +155,46 @@ function printForecast(day) {
     humid.text("Humidity: " + day.list[(i*8)+7].main.humidity + "%")
   }
 }
+//Function to pull data from local storage
+function pullLocalStorage() {
+  var current = JSON.parse(localStorage.getItem("previousCurrent"));//pulls previousCities from local storage
+  var forecast = JSON.parse(localStorage.getItem("previousForecast"));
+  //if array has values, set it equal to global array
+  if(current!=null) {
+    for(var i=0; i<current.length; i++) {
+      previousCurrent[i] = current[i];
+    }
+  }
   
+  if(forecast!=null) {
+    for(var i=0; i<forecast.length; i++) {
+      previousForecast[i] = forecast[i];
+    }
+  }
+}
+//Function to render previous cities from local storage
+function renderPreviousCities() {
+  //append elements to previous cities id
+  for(var i=0; i<previousCurrent.length; i++) {
+    var liEl = $("<div>");
+    liEl.addClass("list-group-item list-group-item-action");
+    liEl.attr("id", "city" + i)
+    liEl.text(previousCurrent[i].name);
+    previousCitiesEl.append(liEl);
+  }
+}
+//Function to search a city from the previous search list
+function previousSearch(event) {
+  for(var i=0; i<previousCurrent.length; i++) {
+    if($(event.target).attr("id")=="city"+i) {
+      displayCurrent(previousCurrent[i]);
+      renderResults();
+      printForecast(previousForecast[i]);
+    }
+  }
+}
 
-searchBtnEl.on('click', getCoordinates);
+//Event listener for search button
+searchBtnEl.on("click", getCoordinates);
+//Event listener for previous city searches
+previousCitiesEl.on("click", previousSearch);
