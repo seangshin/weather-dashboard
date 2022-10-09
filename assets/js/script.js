@@ -88,13 +88,14 @@ function searchAPIWeather(lat, lon) {
 	.then(function(response) {//then method used to return a response object (1st promise)
 		if(response.ok) {//checks if response is successful
 			response.json().then(function(data) {//2nd promise to return a body property called data in JSON format
+        console.log(data);
         if(data.length===0){
           alert("No results found.");
         } else {
           //function to display results
           forecastEl.text("");//clears previous cards
           for(var i=0; i<40; i++) {
-            if(data.list[i].dt_txt.indexOf("12:00:00") > -1) { //checks to output weather at noon for each day
+            if((data.list[i].dt_txt.indexOf("00:00:00") > -1) && moment(data.list[i].dt_txt).format("L")!==moment().format("L")) { //checks to output weather at noon for each day
             printForecast(data.list[i], i);
            }
           }
