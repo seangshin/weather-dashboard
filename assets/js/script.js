@@ -11,7 +11,7 @@ var previousCitiesEl = $("#previous-cities");
 
 var count = 0;
 var search = [];
-
+//Function to initialize the page and get local storage
 function init() {
   search = JSON.parse(localStorage.getItem("previousSearch"));//pulls previous searches from local storage
   count = JSON.parse(localStorage.getItem("previousCount"));
@@ -29,7 +29,7 @@ function init() {
   }
   
 }init();
-
+//Function to get the coordinates of the city searched by using the API provided 
 function searchAPICoordinates(city) {
   var url = "https://api.openweathermap.org/geo/1.0/direct?q=" + city + "&limit=1&appid=10610edbd2d1162b9c9ba8135c819547";
   
@@ -53,7 +53,7 @@ function searchAPICoordinates(city) {
     var userInputEl = $("#user-input");
 		userInputEl.val("");
 }
-
+//Function to get the weather data by passing in city coordinates, uses the Current Weather Data and 5 Day / 3 Hour Forecast API 
 function searchAPIWeather(lat, lon) {
   var forecastRequestURL = "https://api.openweathermap.org/data/2.5/forecast?lat=" + lat + "&lon=" + lon + "&appid=10610edbd2d1162b9c9ba8135c819547&units=imperial"
   var currentRequestURL = "https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon=" + lon + "&appid=10610edbd2d1162b9c9ba8135c819547&units=imperial"
@@ -105,7 +105,7 @@ function searchAPIWeather(lat, lon) {
 			}
 	})
 }
-
+//Function to display the current weather 
 function printCurrentWeather(day) {
   //Pulls weather icon code and concats to provided URL to create image url
   var iconCode = day.weather[0].icon;
@@ -118,7 +118,7 @@ function printCurrentWeather(day) {
   windEl.text("Wind: " + day.wind.speed + " MPH");
   humidityEl.text("Humidity: " + day.main.humidity + "%");
 }
-
+//Function to display the 5 day forcast
 function printForecast(day, i) {
   var cardEl = $("<div>");
   cardEl.addClass("card m-3");
@@ -150,7 +150,7 @@ function printForecast(day, i) {
   humidEl.text("Humidity: " + day.main.humidity + "%")
   cardBodyEl.append(humidEl);
 }
-
+//Function to manage the search list
 function searchList(day) {
   if(search==null) {
     search = [];
@@ -165,7 +165,7 @@ function searchList(day) {
   liEl.text(day.name);
   previousCitiesEl.append(liEl);
 }
-
+//Function to handle the search for the submit event listener
 function handleSearch(event) {
   event.preventDefault();
 
@@ -179,7 +179,7 @@ function handleSearch(event) {
   
   searchAPICoordinates(userInputEl);
 }
-
+//Function to handle previous searches
 function previousSearch(event) {
   event.preventDefault();
   search = JSON.parse(localStorage.getItem("previousSearch"));
@@ -190,7 +190,6 @@ function previousSearch(event) {
     }
   }
 }
-
 //Event listener for search button
 searchFormEl.on("submit", handleSearch);
 //Event listener for previous city searches
